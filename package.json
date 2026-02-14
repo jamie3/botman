@@ -29,6 +29,7 @@
   "dependencies": {
     "@fastify/autoload": "~6.0.3",
     "@fastify/sensible": "~6.0.2",
+    "date-fns": "^4.1.0",
     "fastify": "~5.2.1",
     "fastify-plugin": "~5.0.1",
     "winston": "^3.19.0"

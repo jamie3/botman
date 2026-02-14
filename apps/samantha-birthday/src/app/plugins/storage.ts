@@ -18,5 +18,7 @@ export default fp(async function (fastify: FastifyInstance) {
 
   fastify.decorate('storage', storage);
 
+  const birthdayCount = (await storage.getAll()).length;
   log.info('💾 Birthday storage initialized');
+  log.info(`👥 Tracking ${birthdayCount} ${birthdayCount === 1 ? 'person' : 'people'} for birthday reminders`);
 });

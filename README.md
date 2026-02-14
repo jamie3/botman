@@ -9,4 +9,6 @@ my personal life.
 Birthday buddy stores birthdays of my friends and family. It will be responsible for building a
 profile of eaach person and make recommendations on what to buy them for their birhday.
 
-# shopping
+# ivan-accountant
+
+Ivan is our accountant
