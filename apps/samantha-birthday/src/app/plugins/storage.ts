@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import { BirthdayStorage } from '../services/storage';
+import { log } from '@botman/logger';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -17,5 +18,5 @@ export default fp(async function (fastify: FastifyInstance) {
 
   fastify.decorate('storage', storage);
 
-  fastify.log.info('Birthday storage initialized');
+  log.info('Birthday storage initialized');
 });

@@ -27,6 +27,10 @@ In the apps folder are a set of micro-services that run in docker and interact w
 - Each app has its own Docekrfile. It should be hardened so no one can have ssh/remote access.
 - All the apps can be started via a docker compose file in the root folder of the mono repo.
 
+### Logging
+
+- All the Back End apps should use the logger from libs/logger
+
 ## Constraints
 
 - Apps cannot talk to each other unless I explicitly allow them.
