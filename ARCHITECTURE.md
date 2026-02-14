@@ -4,6 +4,12 @@ In the apps folder are a set of micro-services that run in docker and interact w
 
 ## App Design
 
+This describes the design for all the applications
+
+### Node.js
+
+- All apps should default to Node 22
+
 ### Back End Apps
 
 - All apps should be build using fastify.

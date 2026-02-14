@@ -18,5 +18,5 @@ export default fp(async function (fastify: FastifyInstance) {
 
   fastify.decorate('storage', storage);
 
-  log.info('Birthday storage initialized');
+  log.info('💾 Birthday storage initialized');
 });

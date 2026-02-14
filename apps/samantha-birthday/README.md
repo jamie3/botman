@@ -41,7 +41,7 @@ Each birthday entry contains:
 # Start the API server
 npx nx serve samantha-birthday
 
-# Server will be available at http://localhost:3000
+# Server will be available at http://localhost:8080
 ```
 
 ### Production (Docker)
@@ -152,11 +152,11 @@ DELETE /birthdays/:id
 ## Configuration
 
 Environment variables:
-
+l
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HOST` | Server host | localhost |
-| `PORT` | Server port | 3000 |
+| `HOST` | Server host | 0.0.0.0 |
+| `PORT` | Server port | 8080 |
 | `DATA_DIR` | Data storage directory | ./data |
 | `CRON_SCHEDULE` | Cron schedule for checks | "0 9 * * *" (9 AM daily) |
 | `NOTIFICATION_DAYS` | Days in advance to notify | 14 |

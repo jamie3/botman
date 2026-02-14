@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -15,11 +15,11 @@ COPY dist/apps/samantha-birthday .
 RUN mkdir -p /app/data
 
 # Expose the port
-EXPOSE 3000
+EXPOSE 8080
 
 # Set environment variables
 ENV HOST=0.0.0.0
-ENV PORT=3000
+ENV PORT=8080
 ENV DATA_DIR=/app/data
 ENV NODE_ENV=production
 
