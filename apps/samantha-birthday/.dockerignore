@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.gitignore
+*.md
+src
+tsconfig*.json
+eslint.config.mjs
+project.json
