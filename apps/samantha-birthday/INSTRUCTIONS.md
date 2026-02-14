@@ -19,8 +19,8 @@ For each upcoming birthday, gather the following information:
 - Days until birthday
 - Interests (if available)
 
-### 3. Send Signal Notifications
-For each upcoming birthday found, send a personalized Signal notification to Jamie's phone.
+### 3. Send Telegram Notifications
+For each upcoming birthday found, send a personalized Telegram notification to Jamie.
 
 **Notification Format:**
 
@@ -104,7 +104,7 @@ Log each notification sent including:
 
 ### 8. Error Handling
 - If the API is unavailable, log the error and retry in 5 minutes
-- If Signal fails to send, log the error but continue with other notifications
+- If Telegram fails to send, log the error but continue with other notifications
 - If no birthdays are found, log "No upcoming birthdays" and complete successfully
 
 ## Configuration

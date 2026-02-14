@@ -24,6 +24,10 @@ This describes the design for all the applications
 - Contracts between services should be in a libs/shared/types/services project
 - Common schemas should be stored in a libs/shared/types/common
 
+## Env
+
+- Use dotenv
+
 ## Front End Apps
 
 - All front end apps will be built in Nuxt 4

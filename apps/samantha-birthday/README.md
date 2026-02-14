@@ -160,9 +160,8 @@ l
 | `DATA_DIR` | Data storage directory | ./data |
 | `CRON_SCHEDULE` | Cron schedule for checks | "0 9 * * *" (9 AM daily) |
 | `NOTIFICATION_DAYS` | Days in advance to notify | 14 |
-| `SIGNAL_CLI_PATH` | Path to signal-cli executable | - |
-| `SIGNAL_PHONE_NUMBER` | Signal sender number | - |
-| `SIGNAL_RECIPIENT` | Signal recipient number | - |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token | - |
+| `TELEGRAM_CHAT_ID` | Telegram chat ID | - |
 
 ## Project Structure
 
