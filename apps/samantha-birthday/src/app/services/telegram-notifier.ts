@@ -64,13 +64,42 @@ export class TelegramNotifier {
   /**
    * Send a startup notification
    */
-  async sendStartupNotification(): Promise<void> {
-    const message = `🎂 <b>Samantha Birthday Assistant</b>
+  async sendStartupNotification(upcomingBirthdays?: Array<{
+    name: string;
+    nickname?: string;
+    date: string;
+    daysUntil: number;
+  }>): Promise<void> {
+    let message = `🎂 <b>Samantha Birthday Assistant</b>
 
 ✅ Service started successfully
 🚀 Ready to track birthdays
 
 I'll notify you about upcoming birthdays every day! 🎉`;
+
+    // Add upcoming birthdays if provided (max 5)
+    if (upcomingBirthdays && upcomingBirthdays.length > 0) {
+      message += `\n\n📅 <b>Upcoming Birthdays:</b>\n`;
+
+      const birthdaysToShow = upcomingBirthdays.slice(0, 5);
+      for (const birthday of birthdaysToShow) {
+        const name = birthday.nickname
+          ? `${birthday.name} (${birthday.nickname})`
+          : birthday.name;
+
+        if (birthday.daysUntil === 0) {
+          message += `\n🎉 <b>${name}</b> - TODAY! ${birthday.date}`;
+        } else if (birthday.daysUntil === 1) {
+          message += `\n⭐ <b>${name}</b> - Tomorrow ${birthday.date}`;
+        } else {
+          message += `\n• ${name} - ${birthday.date} (in ${birthday.daysUntil} days)`;
+        }
+      }
+
+      if (upcomingBirthdays.length > 5) {
+        message += `\n\n...and ${upcomingBirthdays.length - 5} more`;
+      }
+    }
 
     await this.sendMessage(message);
   }
