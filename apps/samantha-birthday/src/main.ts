@@ -16,14 +16,17 @@ const server = Fastify({
 // Register your application as a normal plugin.
 server.register(app);
 
-// Start listening.
-server.listen({ port, host }, async (err) => {
-  if (err) {
-    log.error('❌ Failed to start server', err);
-    process.exit(1);
-  } else {
+// Start server after plugins are loaded
+async function start() {
+  try {
+    // Wait for all plugins to be loaded
+    await server.ready();
+
+    // Start listening
+    await server.listen({ port, host });
+
     log.info(`🎂 Samantha Birthday Assistant started`);
-     log.info(`🚀 Server listening at http://${host}:${port}`);
+    log.info(`🚀 Server listening at http://${host}:${port}`);
 
     // Initialize Telegram notifier and send startup notification
     const telegram = new TelegramNotifier();
@@ -43,5 +46,10 @@ server.listen({ port, host }, async (err) => {
     } catch (error) {
       log.error('❌ Failed to check birthdays', error);
     }
+  } catch (err) {
+    log.error('❌ Failed to start server', err);
+    process.exit(1);
   }
-});
+}
+
+start();
