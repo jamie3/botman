@@ -1,6 +1,23 @@
 version: '3.8'
 
 services:
+  mongodb:
+    image: mongo:7
+    container_name: samantha-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=samantha
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
   samantha-birthday:
     build:
       context: .
@@ -11,10 +28,12 @@ services:
     env_file:
       - .env
     environment:
-      - DATA_DIR=/app/data
       - NODE_ENV=production
-    volumes:
-      - samantha-birthday-data:/app/data
+      - MONGO_URL=mongodb://mongodb:27017
+      - MONGO_DB_NAME=samantha
+    depends_on:
+      mongodb:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
@@ -24,5 +43,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  samantha-birthday-data:
+  mongodb-data:
     driver: local

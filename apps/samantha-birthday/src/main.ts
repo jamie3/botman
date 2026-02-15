@@ -8,6 +8,7 @@ import { app } from './app/app';
 import { log } from '@botman/logger';
 import { BirthdayChecker } from './app/services/birthday-checker';
 import { TelegramNotifier } from './app/services/telegram-notifier';
+import { BirthdayStorage } from './app/services/storage';
 
 const host = process.env.HOST ?? '0.0.0.0';
 const port = process.env.PORT ? Number(process.env.PORT) : 8080;
@@ -20,53 +21,31 @@ const server = Fastify({
 // Register your application as a normal plugin.
 server.register(app);
 
-// Add listen hook to run startup tasks after server is fully initialized and listening
+// Add listen hook to send startup notification after server is listening
 server.addHook('onListen', async function () {
-  // Check for upcoming birthdays on startup
-  const upcomingBirthdays: Array<{ name: string; nickname?: string; date: string; daysUntil: number }> = [];
-  try {
-    const birthdays = await this.storage.getAll();
-    const checker = new BirthdayChecker();
-    await checker.checkBirthdays(birthdays, 14);
-
-    // Collect upcoming birthdays for startup notification
-    const { parseISO, format, differenceInDays, setYear, isBefore, addYears, startOfDay } = await import('date-fns');
-    const today = startOfDay(new Date());
-
-    for (const birthday of birthdays) {
-      const birthDate = parseISO(birthday.date_of_birth);
-      let thisYearBirthday = setYear(birthDate, today.getFullYear());
-
-      if (isBefore(thisYearBirthday, today)) {
-        thisYearBirthday = addYears(thisYearBirthday, 1);
-      }
-
-      const daysUntil = differenceInDays(thisYearBirthday, today);
-
-      if (daysUntil >= 0 && daysUntil <= 14) {
-        upcomingBirthdays.push({
-          name: birthday.name,
-          nickname: birthday.nickname,
-          date: format(thisYearBirthday, 'MMM do'),
-          daysUntil
-        });
-      }
-    }
-
-    // Sort by days until birthday
-    upcomingBirthdays.sort((a, b) => a.daysUntil - b.daysUntil);
-  } catch (error) {
-    log.error('❌ Failed to check birthdays', error);
-  }
-
-  // Initialize Telegram notifier and send startup notification with upcoming birthdays
+  // Initialize Telegram notifier and send startup notification
   const telegram = new TelegramNotifier();
   if (telegram.isEnabled()) {
-    try {
-      await telegram.sendStartupNotification(upcomingBirthdays);
-    } catch (error) {
-      log.error('❌ Failed to send startup notification', error);
-    }
+    // Small delay to ensure storage is fully ready, then access via server instance
+    setTimeout(async () => {
+      try {
+        // Get count of people being tracked by creating a new storage instance
+        let birthdayCount = 0;
+        try {
+          const storage = new BirthdayStorage();
+          await storage.initialize();
+          const birthdays = await storage.getAll();
+          birthdayCount = birthdays.length;
+          log.info(`📊 Retrieved ${birthdayCount} birthdays for notification`);
+        } catch (e) {
+          log.warn('⚠️  Could not get birthday count for startup notification', e);
+        }
+
+        await telegram.sendStartupNotification(undefined, birthdayCount);
+      } catch (error) {
+        log.error('❌ Failed to send startup notification', error);
+      }
+    }, 1000); // Wait 1 second for storage to be fully ready
   }
 });
 

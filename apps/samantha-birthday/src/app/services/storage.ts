@@ -1,59 +1,46 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import Database from 'better-sqlite3';
+import { MongoClient, Db, Collection, ObjectId } from 'mongodb';
 import { Birthday, CreateBirthdayInput, UpdateBirthdayInput } from '../types/birthday';
 import { randomUUID } from 'crypto';
+import { log } from '@botman/logger';
 
 export class BirthdayStorage {
-  private db: Database.Database;
-  private dataPath: string;
+  private client: MongoClient;
+  private db!: Db;
+  private collection!: Collection<Birthday>;
+  private mongoUrl: string;
+  private dbName: string;
 
-  constructor(dataDir?: string) {
-    const baseDir = dataDir || process.env.DATA_DIR || './data';
-    this.dataPath = path.join(baseDir, 'birthdays.db');
-
-    // Ensure directory exists
-    if (!fs.existsSync(baseDir)) {
-      fs.mkdirSync(baseDir, { recursive: true });
-    }
-
-    this.db = new Database(this.dataPath);
+  constructor() {
+    this.mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017';
+    this.dbName = process.env.MONGO_DB_NAME || 'samantha';
+    this.client = new MongoClient(this.mongoUrl);
   }
 
   async initialize(): Promise<void> {
-    // Create birthdays table if it doesn't exist
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS birthdays (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        nickname TEXT,
-        date_of_birth TEXT NOT NULL,
-        relationship TEXT,
-        interests TEXT,
-        email TEXT,
-        phone TEXT,
-        address TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+    try {
+      await this.client.connect();
+      this.db = this.client.db(this.dbName);
+      this.collection = this.db.collection<Birthday>('birthdays');
 
-    // Create index on email for faster lookups
-    this.db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_birthdays_email ON birthdays(email)
-    `);
+      // Create indexes
+      await this.collection.createIndex({ email: 1 });
+      await this.collection.createIndex({ name: 1 });
+
+      log.info('💾 MongoDB connected successfully');
+    } catch (error) {
+      log.error('❌ Failed to connect to MongoDB', error);
+      throw error;
+    }
   }
 
   async getAll(): Promise<Birthday[]> {
-    const stmt = this.db.prepare('SELECT * FROM birthdays ORDER BY name');
-    const rows = stmt.all() as Birthday[];
-    return rows;
+    const birthdays = await this.collection.find({}).sort({ name: 1 }).toArray();
+    return birthdays;
   }
 
   async getById(id: string): Promise<Birthday | undefined> {
-    const stmt = this.db.prepare('SELECT * FROM birthdays WHERE id = ?');
-    const row = stmt.get(id) as Birthday | undefined;
-    return row;
+    const birthday = await this.collection.findOne({ id });
+    return birthday || undefined;
   }
 
   async create(input: CreateBirthdayInput): Promise<Birthday> {
@@ -62,25 +49,7 @@ export class BirthdayStorage {
       ...input,
     };
 
-    const stmt = this.db.prepare(`
-      INSERT INTO birthdays (
-        id, name, nickname, date_of_birth, relationship,
-        interests, email, phone, address
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
-      birthday.id,
-      birthday.name,
-      birthday.nickname || null,
-      birthday.date_of_birth,
-      birthday.relationship || null,
-      birthday.interests || null,
-      birthday.email || null,
-      birthday.phone || null,
-      birthday.address || null
-    );
-
+    await this.collection.insertOne(birthday as any);
     return birthday;
   }
 
@@ -95,44 +64,27 @@ export class BirthdayStorage {
       ...input,
     };
 
-    const stmt = this.db.prepare(`
-      UPDATE birthdays
-      SET name = ?, nickname = ?, date_of_birth = ?, relationship = ?,
-          interests = ?, email = ?, phone = ?, address = ?,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `);
-
-    stmt.run(
-      updated.name,
-      updated.nickname || null,
-      updated.date_of_birth,
-      updated.relationship || null,
-      updated.interests || null,
-      updated.email || null,
-      updated.phone || null,
-      updated.address || null,
-      id
+    await this.collection.updateOne(
+      { id },
+      { $set: updated }
     );
 
     return updated;
   }
 
   async delete(id: string): Promise<boolean> {
-    const stmt = this.db.prepare('DELETE FROM birthdays WHERE id = ?');
-    const result = stmt.run(id);
-    return result.changes > 0;
+    const result = await this.collection.deleteOne({ id });
+    return result.deletedCount > 0;
   }
 
   async findByEmail(email: string): Promise<Birthday | undefined> {
-    const stmt = this.db.prepare('SELECT * FROM birthdays WHERE email = ?');
-    const row = stmt.get(email) as Birthday | undefined;
-    return row;
+    const birthday = await this.collection.findOne({ email });
+    return birthday || undefined;
   }
 
   async getUpcomingBirthdays(days = 30): Promise<Birthday[]> {
-    // Get all birthdays and filter in JavaScript for now
-    // SQLite date handling for recurring birthdays is complex
+    // Get all birthdays and filter in JavaScript
+    // MongoDB date handling for recurring birthdays is complex
     const allBirthdays = await this.getAll();
     const today = new Date();
     const futureDate = new Date();
@@ -150,7 +102,7 @@ export class BirthdayStorage {
     });
   }
 
-  close(): void {
-    this.db.close();
+  async close(): Promise<void> {
+    await this.client.close();
   }
 }

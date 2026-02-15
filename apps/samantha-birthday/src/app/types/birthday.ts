@@ -8,6 +8,7 @@ export interface Birthday {
   address?: string;
   relationship?: string;
   interests?: string;
+  gender?: string;
 }
 
 export interface CreateBirthdayInput {
@@ -19,6 +20,7 @@ export interface CreateBirthdayInput {
   address?: string;
   relationship?: string;
   interests?: string;
+  gender?: string;
 }
 
 export type UpdateBirthdayInput = Partial<CreateBirthdayInput>;

@@ -69,13 +69,17 @@ export class TelegramNotifier {
     nickname?: string;
     date: string;
     daysUntil: number;
-  }>): Promise<void> {
+  }>, birthdayCount?: number): Promise<void> {
     let message = `🎂 <b>Samantha Birthday Assistant</b>
 
 ✅ Service started successfully
-🚀 Ready to track birthdays
+🚀 Ready to track birthdays`;
 
-I'll notify you about upcoming birthdays every day! 🎉`;
+    if (birthdayCount !== undefined && birthdayCount > 0) {
+      message += `\n👥 Tracking ${birthdayCount} ${birthdayCount === 1 ? 'person' : 'people'}`;
+    }
+
+    message += `\n\nI'll notify you about upcoming birthdays every day! 🎉`;
 
     // Add upcoming birthdays if provided (max 5)
     if (upcomingBirthdays && upcomingBirthdays.length > 0) {
