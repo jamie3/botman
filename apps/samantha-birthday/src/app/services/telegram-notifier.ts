@@ -82,10 +82,16 @@ export class TelegramNotifier {
   }
 
   /**
-   * Get time-based greeting based on current hour
+   * Get time-based greeting based on current hour in Edmonton/Mountain time
    */
   private getTimeBasedGreeting(name: string): string {
-    const hour = new Date().getHours();
+    // Get current time in America/Edmonton timezone
+    const edmontonTime = new Date().toLocaleString('en-US', {
+      timeZone: 'America/Edmonton',
+      hour: 'numeric',
+      hour12: false
+    });
+    const hour = parseInt(edmontonTime);
 
     if (hour >= 5 && hour < 12) {
       return `Good morning ${name}`;

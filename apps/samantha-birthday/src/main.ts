@@ -21,10 +21,12 @@ const server = Fastify({
 // Register your application as a normal plugin.
 server.register(app);
 
+// Initialize Telegram notifier at the app level (keep it alive)
+const telegram = new TelegramNotifier();
+
 // Add listen hook to send startup notification after server is listening
 server.addHook('onListen', async function () {
-  // Initialize Telegram notifier and send startup notification
-  const telegram = new TelegramNotifier();
+  // Send startup notification if Telegram is enabled
   if (telegram.isEnabled()) {
     // Small delay to ensure storage is fully ready, then access via server instance
     setTimeout(async () => {
