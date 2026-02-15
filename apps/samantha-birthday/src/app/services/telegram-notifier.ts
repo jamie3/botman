@@ -4,7 +4,7 @@ import { log } from '@botman/logger';
 export class TelegramNotifier {
   private bot: TelegramBot | null = null;
   private chatId: string;
-  private enabled: boolean = false;
+  private enabled = false;
 
   constructor() {
     const botToken = process.env['TELEGRAM_BOT_TOKEN'];
@@ -26,16 +26,73 @@ export class TelegramNotifier {
       return;
     }
 
-    // Initialize bot
+    // Initialize bot with polling enabled to receive messages
     try {
-      this.bot = new TelegramBot(botToken, { polling: false });
+      this.bot = new TelegramBot(botToken, { polling: true });
       this.enabled = true;
-      log.info('📱 Telegram notifier initialized');
+      log.info('📱 Telegram bot initialized with message listening enabled');
       log.info(`✅ Bot token: ${botToken.substring(0, 10)}...`);
       log.info(`✅ Chat ID: ${this.chatId}`);
+
+      // Set up message listener
+      this.setupMessageListener();
     } catch (error) {
       log.error('❌ Failed to initialize Telegram bot', error);
       this.enabled = false;
+    }
+  }
+
+  /**
+   * Set up listener for incoming Telegram messages
+   */
+  private setupMessageListener(): void {
+    if (!this.bot) return;
+
+    // Listen for any text messages
+    this.bot.on('message', async (msg) => {
+      const chatId = msg.chat.id;
+      const userId = msg.from?.id;
+      const username = msg.from?.username || msg.from?.first_name || 'Unknown';
+      const firstName = msg.from?.first_name || 'there';
+      const text = msg.text || '';
+
+      // Log the incoming message
+      log.info('📩 Incoming Telegram message:', {
+        chatId,
+        userId,
+        username,
+        text,
+        timestamp: new Date(msg.date * 1000).toISOString()
+      });
+
+      // Handle "Hello Sam" greeting
+      if (text.toLowerCase().includes('hello sam')) {
+        const greeting = this.getTimeBasedGreeting(firstName);
+        await this.bot?.sendMessage(chatId, greeting);
+        log.info(`📤 Sent greeting: ${greeting}`);
+      }
+    });
+
+    // Listen for polling errors
+    this.bot.on('polling_error', (error) => {
+      log.error('❌ Telegram polling error:', error);
+    });
+
+    log.info('👂 Telegram message listener active');
+  }
+
+  /**
+   * Get time-based greeting based on current hour
+   */
+  private getTimeBasedGreeting(name: string): string {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) {
+      return `Good morning ${name}`;
+    } else if (hour >= 12 && hour < 17) {
+      return `Good afternoon ${name}`;
+    } else {
+      return `Good evening ${name}`;
     }
   }
 
